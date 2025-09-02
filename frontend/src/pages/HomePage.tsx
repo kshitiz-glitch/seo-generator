@@ -1,4 +1,3 @@
-// src/pages/HomePage.tsx
 import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { useDropzone } from 'react-dropzone'
@@ -6,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useGenerateSeo } from '../hooks/useGenerateSeo'
 
 type FormValues = {
-  file?: FileList
+  file?: File[]
   url?: string
   language: string
   tone: string
@@ -27,6 +26,8 @@ export default function HomePage() {
     formState: { isSubmitting },
   } = useForm<FormValues>({
     defaultValues: {
+      file: [],
+      url: '',
       language: 'en',
       tone: 'Professional',
       length: 60,
@@ -34,10 +35,27 @@ export default function HomePage() {
   })
 
   const onSubmit = (data: FormValues) => {
-    mutate(data, {
-      onSuccess: (res) => {
-        navigate(`/job/${res.jobId}`)
-      },
+    console.log('🔥 onSubmit triggered with:', data)
+    const formData = new FormData()
+
+    if (activeTab === 'Upload File' && data.file?.length) {
+      formData.append('file', data.file[0])
+    } else if (activeTab === 'Enter URL' && data.url) {
+      formData.append('url', data.url)
+    }
+
+    formData.append('language', data.language)
+    formData.append('tone', data.tone)
+    formData.append('length', String(data.length))
+
+    mutate(formData, {
+      onSuccess: (res) => 
+         {
+      console.log('✅ Mutation success, jobId:', res.jobId)
+      navigate(`/job/${res.jobId}`)
+    },
+    onError: (err) => {
+      console.error('❌ Mutation failed:', err)}
     })
   }
 
@@ -49,12 +67,17 @@ export default function HomePage() {
       : typeof urlValue === 'string' && urlValue.startsWith('http')
 
   return (
-    <div className="w-screen min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      <main className="flex-grow flex items-center justify-center p-4 w-full">
+    <div className="w-screen min-h-screen bg-gradient-to-br  from-purple-900 to-indigo-900 flex flex-col">
+
+      <main className="flex-grow flex items-center justify-center p-6 w-full">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 w-full max-w-md space-y-6"
+          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-10 w-full max-w-lg space-y-8 transition-transform hover:scale-[1.01]"
         >
+          <h1 className="text-2xl font-bold text-center text-gray-800 dark:text-white">
+            Generate SEO Metadata Instantly
+          </h1>
+
           {/* Tabs */}
           <div className="flex space-x-2">
             {TABS.map((tab) => (
@@ -62,7 +85,7 @@ export default function HomePage() {
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2 rounded-lg transition ${
+                className={`flex-1 py-2 rounded-lg font-medium transition ${
                   activeTab === tab
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
@@ -87,9 +110,7 @@ export default function HomePage() {
                   multiple: false,
                   accept: {
                     'application/pdf': ['.pdf'],
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
-                      '.docx',
-                    ],
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
                   },
                   onDrop: (files) => field.onChange(files),
                 })
@@ -97,9 +118,10 @@ export default function HomePage() {
                   <div>
                     <div
                       {...getRootProps()}
-                      className="border-2 border-dashed p-6 text-center cursor-pointer hover:border-blue-500 rounded-lg"
+                      className="border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-8 text-center cursor-pointer hover:border-blue-500 rounded-xl transition"
                     >
                       <input {...getInputProps()} />
+                      <div className="text-4xl mb-2 text-blue-500">📄</div>
                       {field.value?.length
                         ? field.value[0].name
                         : 'Drag & drop a PDF/DOCX here, or click to select'}
@@ -133,7 +155,7 @@ export default function HomePage() {
                     type="url"
                     {...field}
                     placeholder="https://example.com/article"
-                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2"
+                    className="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none p-2"
                   />
                   {fieldState.error && (
                     <p className="text-red-500 mt-1 text-sm">
@@ -156,11 +178,19 @@ export default function HomePage() {
                 </label>
                 <select
                   {...field}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
-                  <option value="en">English</option>
-                  <option value="es">Spanish</option>
-                  {/* add more languages */}
+                  
+                  
+                  <option value="en">🇺🇸 English</option>
+                  <option value="fr">🇫🇷 French</option>
+                  <option value="de">🇩🇪 German</option>
+                  
+                  <option value="it">🇮🇹 Italian</option>
+                  
+                  
+                  
+                  <option value="es">🇪🇸 Spanish</option>
                 </select>
               </div>
             )}
@@ -177,7 +207,7 @@ export default function HomePage() {
                 </label>
                 <select
                   {...field}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
                   <option>Professional</option>
                   <option>Friendly</option>
@@ -198,19 +228,26 @@ export default function HomePage() {
                 </label>
                 <input
                   type="number"
-                  {...field}
                   max={60}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2"
+                  {...field}
+                  className="mt-1 block w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none p-2"
                 />
               </div>
             )}
           />
 
-          {/* Submit */}
+          {/* Progress Bar */}
+          {isPending && (
+            <div className="w-full h-2 bg-blue-200 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-600 animate-pulse w-2/3"></div>
+            </div>
+          )}
+
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={!isValid || isSubmitting || isPending}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl shadow hover:bg-blue-700 disabled:opacity-50 transition"
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 text-lg font-semibold rounded-xl shadow-lg disabled:opacity-50 transition-transform hover:scale-[1.01]"
           >
             {isPending ? 'Generating…' : 'Generate SEO Copy'}
           </button>
@@ -219,3 +256,5 @@ export default function HomePage() {
     </div>
   )
 }
+
+{/* uvicorn app.main:app --reload */}

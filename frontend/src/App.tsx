@@ -4,7 +4,7 @@ import Header       from './components/Header'
 import LandingPage  from './pages/LandingPage'
 import SignupPage   from './pages/SignupPage'
 import LoginPage    from './pages/LoginPage'
-import HomePage from './pages/HomePage'
+import HomePage     from './pages/HomePage'
 import ResultPage   from './pages/ResultPage'
 import HistoryPage  from './pages/HistoryPage'
 import RequireAuth  from './components/RequireAuth'
@@ -12,20 +12,20 @@ import RequireAuth  from './components/RequireAuth'
 export default function App() {
   return (
     <BrowserRouter>
-      {/* Single Header for all pages */}
+      {/* Global Header */}
       <Header />
 
       <Routes>
-        {/* Public marketing & auth */}
-        <Route path="/"      element={<LandingPage />} />
+        {/* Public routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/login"  element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
-        {/* Core app flows */}
-        <Route path="/app"        element={<HomePage />} />
+        {/* App functionality */}
+        <Route path="/app" element={<HomePage />} />
         <Route path="/job/:jobId" element={<ResultPage />} />
 
-        {/* Protected history */}
+        {/* Authenticated route */}
         <Route
           path="/history"
           element={
@@ -35,7 +35,7 @@ export default function App() {
           }
         />
 
-        {/* Fallback */}
+        {/* Catch-all fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

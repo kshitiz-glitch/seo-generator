@@ -1,22 +1,38 @@
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
-import useThemeStore from '../store/themeStore'
+import Logo from '../assets/logo.png'
+import ProfileMenu from './ProfileMenu'
 
 export default function Header() {
-  const { theme, toggleTheme } = useThemeStore()
+  const [isScrolled, setIsScrolled] = useState(false)
   const loc = useLocation()
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
-    <header className="bg-white dark:bg-gray-800 shadow p-4 flex items-center justify-between">
-      <div className="flex items-center space-x-4">
-        <span className="text-xl font-bold">SEO Gen</span>
-        <nav className="space-x-2">
+    <header
+      className={`fixed top-0 left-0 w-full z-50 px-8 py-6 flex items-center justify-between transition-all duration-300
+      ${isScrolled ? 'bg-black/80 shadow-md backdrop-blur-md' : 'bg-transparent text-white'}`}
+    >
+      {/* Logo and Title */}
+      <Link to="/app" className="flex items-center space-x-3">
+        <img src={Logo} alt="SEO Gen Logo" className="h-12 w-auto" />
+        <span className="text-2xl font-bold text-white">News SEO</span>
+      </Link>
+
+      {/* Navigation and Profile */}
+      <div className="flex items-center space-x-6">
+        <nav className="flex items-center space-x-6 text-white text-lg">
           <Link
-            to="/"
+            to="/app"
             className={`px-3 py-1 rounded ${
-              loc.pathname === '/'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-700 dark:text-gray-200 hover:underline'
+              loc.pathname === '/app' ? 'bg-white text-black' : 'hover:underline text-white'
             }`}
           >
             Home
@@ -24,28 +40,18 @@ export default function Header() {
           <Link
             to="/history"
             className={`px-3 py-1 rounded ${
-              loc.pathname === '/history'
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-700 dark:text-gray-200 hover:underline'
+              loc.pathname === '/history' ? 'bg-white text-black' : 'hover:underline text-white'
             }`}
           >
             History
           </Link>
         </nav>
+
+        {/* Profile menu pushed slightly apart */}
+        <div className="ml-4">
+          <ProfileMenu />
+        </div>
       </div>
-      <button
-        onClick={toggleTheme}
-        aria-label="Toggle theme"
-        className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-      >
-        {theme === 'light' ? (
-          <MoonIcon className="h-6 w-6 text-gray-800" />
-        ) : (
-          <SunIcon className="h-6 w-6 text-yellow-300" />
-        )}
-      </button>
     </header>
   )
 }
-
-

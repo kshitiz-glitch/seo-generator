@@ -22,10 +22,15 @@ from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from jose import jwt, JWTError
 from fastapi import Request
+from openai import APIConnectionError, APIStatusError, RateLimitError
 
 # Load environment
-load_dotenv()
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
+# ✅ Debug: Confirm if the GROQ_API_KEY is loaded
+# top of file (optional but recommended)
+MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
+print("🔑 Loaded GROQ_API_KEY =", os.getenv("GROQ_API_KEY"))
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
     base_url="https://api.groq.com/openai/v1"
@@ -134,7 +139,10 @@ async def generate_seo(
     try:
         print("🧠 Calling Groq...")
         chat_resp = client.chat.completions.create(
-            model="llama3-8b-8192",
+            # 👇 try the exact model that works for your key.
+            # If `llama3-8b-8192` is flaky, try one of:
+            # "llama3-70b-8192", "llama-3.1-8b-instant", or whatever worked last time.
+            model=MODEL,
             messages=[
                 {"role": "system", "content": "You generate SEO-optimized metadata."},
                 {"role": "user", "content": prompt}
@@ -143,9 +151,32 @@ async def generate_seo(
             max_tokens=length + 100,
         )
         model_reply = chat_resp.choices[0].message.content
+
+    except RateLimitError as e:
+        err = f"Groq rate limit: {getattr(e, 'message', str(e))}"
+        print("❌", err)
+        raise HTTPException(status_code=502, detail=err)
+
+    except APIStatusError as e:
+        # non-2xx with response body from Groq
+        body_text = None
+        try:
+            body_text = e.response.text
+        except Exception:
+            body_text = None
+        err = f"Groq API status error {e.status_code}: {body_text or str(e)}"
+        print("❌", err)
+        raise HTTPException(status_code=502, detail=err)
+
+    except APIConnectionError as e:
+        err = f"Groq connection error: {str(e)}"
+        print("❌", err)
+        raise HTTPException(status_code=502, detail=err)
+
     except Exception as e:
-        JOB_STORAGE[job_id] = {"status": "error", "error_message": str(e)}
-        raise HTTPException(502, f"Groq error: {e}")
+        err = f"Groq unexpected error: {repr(e)}"
+        print("❌", err)
+        raise HTTPException(status_code=502, detail=err)
 
     # Step E: Parse JSON
     try:
