@@ -1,51 +1,225 @@
-import { useHistory } from '../hooks/useHistory'
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
+import useAuthStore from '../store/authStore'
+
+type HistoryItem = {
+  _id: string
+  title: string
+  meta_description: string
+  pdf_url: string
+  docx_url: string
+  created_at: string
+}
 
 export default function HistoryPage() {
-  const { data, isLoading, error } = useHistory()
+  const { token } = useAuthStore()
+  const [history, setHistory] = useState<HistoryItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  if (isLoading) return <p className="p-8 text-white bg-gradient-to-br from-purple-900 to-indigo-900 min-h-screen">Loading history...</p>
-  if (error) return <p className="p-8 text-red-500 bg-gradient-to-br from-purple-900 to-indigo-900 min-h-screen">Error loading history</p>
-  if (!data || data.length === 0)
-    return <p className="p-8 text-white bg-gradient-to-br from-purple-900 to-indigo-900 min-h-screen ">No history found.</p>
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await fetch('http://localhost:8000/api/v1/history', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!res.ok) throw new Error('Failed to fetch history')
+
+        const data = await res.json()
+        setHistory(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load history')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (token) fetchHistory()
+  }, [token])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center relative">
+        <div className="cyber-bg" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-panel p-12 rounded-2xl text-center"
+        >
+          <div className="cyber-loader mx-auto mb-6" />
+          <h2 className="text-xl font-bold text-white">Loading History</h2>
+          <p className="text-gray-400 mt-2">Fetching your previous generations...</p>
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white px-4 py-8">
-      <div className="max-w-3xl mx-auto mt-20">
-        <h1 className="text-3xl font-bold mb-6 text-center">Your SEO History</h1>
-        <ul className="space-y-4">
-          {data.map((job) => (
-            <li
-              key={job.id}
-              className="group border border-white/20 rounded-lg p-4 shadow bg-white text-black dark:bg-gray-800 dark:text-white transition duration-300 hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              {/* Hover-only timestamp */}
-              <p className="text-sm text-gray-400 opacity-0 group-hover:opacity-100 transition duration-300 mb-1">
-                🕒 Generated on {new Date(job.created_at).toLocaleDateString()}
-              </p>
+    <div className="min-h-screen w-full pt-24 pb-12 px-6 relative overflow-hidden">
+      {/* Background */}
+      <div className="cyber-bg" />
 
-              <h2 className="text-xl font-semibold">{job.title}</h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-2">{job.meta_description}</p>
-              <div className="space-x-4">
-                <a
-                  href={job.pdf_url}
-                  className="text-blue-600 underline"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Download PDF
-                </a>
-                <a
-                  href={job.docx_url}
-                  className="text-green-600 underline"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Download DOCX
-                </a>
+      {/* Hex Grid */}
+      <div className="hex-grid opacity-5" />
+
+      <div className="max-w-6xl mx-auto relative z-10">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <span className="glow-text">Generation History</span>
+          </h1>
+          <p className="text-gray-400">View and download your previous SEO generations</p>
+        </motion.div>
+
+        {/* Error State */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="glass-panel p-6 rounded-xl text-center text-red-400 mb-8"
+          >
+            ⚠️ {error}
+          </motion.div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && history.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-panel p-16 rounded-2xl text-center"
+          >
+            <div className="text-6xl mb-6">📭</div>
+            <h2 className="text-2xl font-bold text-white mb-3">No History Yet</h2>
+            <p className="text-gray-400 mb-8">Start generating SEO content to see your history here</p>
+            <Link to="/app">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                className="cyber-btn"
+              >
+                ⚡ Create Your First Generation
+              </motion.button>
+            </Link>
+          </motion.div>
+        )}
+
+        {/* History Grid */}
+        {history.length > 0 && (
+          <div className="grid md:grid-cols-2 gap-6">
+            {history.map((item, index) => (
+              <motion.div
+                key={item._id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="glass-card p-6 rounded-xl group hover:border-cyan-500/30 transition-all"
+              >
+                {/* Date Badge */}
+                <div className="flex items-center justify-between mb-4">
+                  <span className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-medium">
+                    {new Date(item.created_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-lg font-semibold text-white mb-2 line-clamp-2 group-hover:text-cyan-400 transition-colors">
+                  {item.title}
+                </h3>
+
+                {/* Meta Description */}
+                <p className="text-gray-400 text-sm line-clamp-3 mb-6">
+                  {item.meta_description}
+                </p>
+
+                {/* Stats */}
+                <div className="flex items-center gap-4 mb-4 text-xs text-gray-500">
+                  <span>Title: {item.title.length} chars</span>
+                  <span>•</span>
+                  <span>Meta: {item.meta_description.length} chars</span>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  {item.pdf_url && (
+                    <a
+                      href={item.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 px-4 rounded-lg bg-red-500/10 text-red-400 text-sm font-medium text-center hover:bg-red-500/20 transition-all"
+                    >
+                      📥 PDF
+                    </a>
+                  )}
+                  {item.docx_url && (
+                    <a
+                      href={item.docx_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 px-4 rounded-lg bg-blue-500/10 text-blue-400 text-sm font-medium text-center hover:bg-blue-500/20 transition-all"
+                    >
+                      📄 DOCX
+                    </a>
+                  )}
+                  <button
+                    onClick={() => navigator.clipboard.writeText(item.title + '\n\n' + item.meta_description)}
+                    className="py-2 px-4 rounded-lg bg-purple-500/10 text-purple-400 text-sm font-medium hover:bg-purple-500/20 transition-all"
+                  >
+                    📋
+                  </button>
+                </div>
+
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/0 to-purple-500/0 group-hover:from-cyan-500/5 group-hover:to-purple-500/5 transition-all pointer-events-none" />
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Stats Bar */}
+        {history.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-12 glass-panel p-6 rounded-xl"
+          >
+            <div className="flex flex-wrap justify-center gap-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold glow-text">{history.length}</div>
+                <div className="text-sm text-gray-400">Total Generations</div>
               </div>
-            </li>
-          ))}
-        </ul>
+              <div className="h-12 w-px bg-gray-700 hidden sm:block" />
+              <div className="text-center">
+                <div className="text-3xl font-bold text-cyan-400">
+                  {Math.round(history.reduce((acc, item) => acc + item.title.length, 0) / history.length)}
+                </div>
+                <div className="text-sm text-gray-400">Avg. Title Length</div>
+              </div>
+              <div className="h-12 w-px bg-gray-700 hidden sm:block" />
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-400">
+                  {Math.round(history.reduce((acc, item) => acc + item.meta_description.length, 0) / history.length)}
+                </div>
+                <div className="text-sm text-gray-400">Avg. Meta Length</div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   )

@@ -1,9 +1,27 @@
-"backend/.env" 
-"backend/app/__pycache__/" 
-"backend/downloads/" 
-"backend/tmp.*" 
+# Backend
 backend/.env
+backend/.venv/
 backend/app/__pycache__/
 backend/downloads/
 backend/tmp.*
-backend/.env
+backend/*.json
+!backend/package*.json
+
+# Frontend
+frontend/node_modules/
+frontend/.venv/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
