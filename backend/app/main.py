@@ -37,9 +37,20 @@ client = OpenAI(
 )
 
 app = FastAPI()
+
+# CORS Configuration - Allow frontend origins
+# Set CORS_ORIGINS env var to your frontend URL in production (e.g., https://your-app.vercel.app)
+# Use * for development or comma-separated URLs for multiple origins
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+if cors_origins == "*":
+    allowed_origins = ["*"]
+else:
+    allowed_origins = [origin.strip() for origin in cors_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=allowed_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

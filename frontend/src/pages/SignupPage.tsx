@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import useAuthStore from '../store/authStore'
+import { API_ENDPOINTS } from '../config/api'
 
 type FormValues = {
   email: string
@@ -30,7 +31,7 @@ export default function SignupPage() {
     setError('')
 
     try {
-      const res = await fetch('http://localhost:8000/api/v1/signup', {
+      const res = await fetch(API_ENDPOINTS.signup, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: data.email, password: data.password }),

@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
+import { API_ENDPOINTS } from '../config/api'
 
 type JobStatus = {
   status: 'completed' | 'processing' | 'error'
@@ -20,7 +21,7 @@ export default function ResultPage() {
   useEffect(() => {
     const fetchResult = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/v1/status/${jobId}`)
+        const res = await fetch(API_ENDPOINTS.status(jobId!))
         const data = await res.json()
         setResult(data)
       } catch (err) {
@@ -150,8 +151,8 @@ export default function ResultPage() {
             <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
               <span>{result?.title?.length || 0} characters</span>
               <span className={`px-2 py-0.5 rounded text-xs ${(result?.title?.length || 0) <= 60
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-yellow-500/20 text-yellow-400'
+                ? 'bg-green-500/20 text-green-400'
+                : 'bg-yellow-500/20 text-yellow-400'
                 }`}>
                 {(result?.title?.length || 0) <= 60 ? '✓ Optimal' : '⚠ Too long'}
               </span>
@@ -184,8 +185,8 @@ export default function ResultPage() {
             <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
               <span>{result?.meta_description?.length || 0} characters</span>
               <span className={`px-2 py-0.5 rounded text-xs ${(result?.meta_description?.length || 0) <= 160
-                  ? 'bg-green-500/20 text-green-400'
-                  : 'bg-yellow-500/20 text-yellow-400'
+                ? 'bg-green-500/20 text-green-400'
+                : 'bg-yellow-500/20 text-yellow-400'
                 }`}>
                 {(result?.meta_description?.length || 0) <= 160 ? '✓ Optimal' : '⚠ Too long'}
               </span>

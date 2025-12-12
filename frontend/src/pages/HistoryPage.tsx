@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import useAuthStore from '../store/authStore'
+import { API_ENDPOINTS } from '../config/api'
 
 type HistoryItem = {
   _id: string
@@ -21,7 +22,7 @@ export default function HistoryPage() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/v1/history', {
+        const res = await fetch(API_ENDPOINTS.history, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
