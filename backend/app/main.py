@@ -164,30 +164,77 @@ async def generate_seo(
         model_reply = chat_resp.choices[0].message.content
 
     except RateLimitError as e:
-        err = f"Groq rate limit: {getattr(e, 'message', str(e))}"
-        print("❌", err)
-        raise HTTPException(status_code=502, detail=err)
+        err_msg = getattr(e, 'message', str(e))
+        print("=" * 60)
+        print("❌ GROQ API RATE LIMIT ERROR")
+        print("=" * 60)
+        print(f"⚠️  Your Groq API key has hit the rate limit!")
+        print(f"📋 Error details: {err_msg}")
+        print("💡 Solutions:")
+        print("   1. Wait a few minutes and try again")
+        print("   2. Upgrade your Groq plan for higher limits")
+        print("   3. Use a different API key")
+        print("=" * 60)
+        JOB_STORAGE[job_id] = {"status": "error", "error_message": "API rate limit reached. Please try again later."}
+        raise HTTPException(status_code=429, detail="API rate limit reached. Please try again in a few minutes.")
 
     except APIStatusError as e:
-        # non-2xx with response body from Groq
         body_text = None
         try:
             body_text = e.response.text
         except Exception:
-            body_text = None
-        err = f"Groq API status error {e.status_code}: {body_text or str(e)}"
-        print("❌", err)
-        raise HTTPException(status_code=502, detail=err)
+            pass
+        
+        print("=" * 60)
+        print("❌ GROQ API STATUS ERROR")
+        print("=" * 60)
+        print(f"🔴 Status Code: {e.status_code}")
+        print(f"📋 Response: {body_text or str(e)}")
+        
+        # Check for common error types
+        if e.status_code == 401:
+            print("⚠️  INVALID API KEY - Your Groq API key is invalid or expired!")
+            print("💡 Solution: Check your GROQ_API_KEY in environment variables")
+            error_detail = "Invalid API key. Please check your Groq API key."
+        elif e.status_code == 403:
+            print("⚠️  ACCESS DENIED - Your API key doesn't have access to this model")
+            print("💡 Solution: Verify your Groq account has access to the model")
+            error_detail = "API access denied. Please verify your API key permissions."
+        elif e.status_code == 429:
+            print("⚠️  QUOTA EXCEEDED - You've exceeded your API quota!")
+            print("💡 Solutions:")
+            print("   1. Wait for quota reset (usually daily)")
+            print("   2. Upgrade your Groq plan")
+            error_detail = "API quota exceeded. Please try again later."
+        else:
+            error_detail = f"API error ({e.status_code}). Please try again."
+        
+        print("=" * 60)
+        JOB_STORAGE[job_id] = {"status": "error", "error_message": error_detail}
+        raise HTTPException(status_code=502, detail=error_detail)
 
     except APIConnectionError as e:
-        err = f"Groq connection error: {str(e)}"
-        print("❌", err)
-        raise HTTPException(status_code=502, detail=err)
+        print("=" * 60)
+        print("❌ GROQ API CONNECTION ERROR")
+        print("=" * 60)
+        print(f"🔴 Cannot connect to Groq API!")
+        print(f"📋 Error: {str(e)}")
+        print("💡 Solutions:")
+        print("   1. Check your internet connection")
+        print("   2. Verify Groq API is not down (status.groq.com)")
+        print("=" * 60)
+        JOB_STORAGE[job_id] = {"status": "error", "error_message": "Cannot connect to AI service. Please try again."}
+        raise HTTPException(status_code=502, detail="Cannot connect to AI service. Please try again.")
 
     except Exception as e:
-        err = f"Groq unexpected error: {repr(e)}"
-        print("❌", err)
-        raise HTTPException(status_code=502, detail=err)
+        print("=" * 60)
+        print("❌ GROQ UNEXPECTED ERROR")
+        print("=" * 60)
+        print(f"🔴 Unexpected error: {repr(e)}")
+        print("💡 This may be a temporary issue. Try again.")
+        print("=" * 60)
+        JOB_STORAGE[job_id] = {"status": "error", "error_message": "Unexpected AI error. Please try again."}
+        raise HTTPException(status_code=502, detail="Unexpected AI error. Please try again.")
 
     # Step E: Parse JSON
     try:
