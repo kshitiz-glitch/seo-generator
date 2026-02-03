@@ -30,7 +30,11 @@ load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
 # top of file (optional but recommended)
 MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
-print("🔑 Loaded GROQ_API_KEY =", os.getenv("GROQ_API_KEY"))
+# Base URL for file downloads (set to your Render URL in production)
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+
+print("🔑 Loaded GROQ_API_KEY =", os.getenv("GROQ_API_KEY")[:10] + "..." if os.getenv("GROQ_API_KEY") else "NOT SET")
+print("🌐 BASE_URL =", BASE_URL)
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
     base_url="https://api.groq.com/openai/v1"
@@ -275,8 +279,8 @@ async def generate_seo(
             "email": user,
             "title": title,
             "meta_description": meta,
-            "pdf_url": f"http://localhost:8000/downloads/{pdf_path.name}",
-            "docx_url": f"http://localhost:8000/downloads/{docx_path.name}",
+            "pdf_url": f"{BASE_URL}/downloads/{pdf_path.name}",
+            "docx_url": f"{BASE_URL}/downloads/{docx_path.name}",
             "created_at": datetime.utcnow()
         })
 
@@ -284,8 +288,8 @@ async def generate_seo(
             "status": "completed",
             "title": title,
             "meta_description": meta,
-            "pdf_url": f"http://localhost:8000/downloads/{pdf_path.name}",
-            "docx_url": f"http://localhost:8000/downloads/{docx_path.name}",
+            "pdf_url": f"{BASE_URL}/downloads/{pdf_path.name}",
+            "docx_url": f"{BASE_URL}/downloads/{docx_path.name}",
         }
 
         
