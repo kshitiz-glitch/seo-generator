@@ -38,6 +38,15 @@ client = OpenAI(
 
 app = FastAPI()
 
+# Health check / root route
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "SEO Generator API is running", "version": "1.0.0"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 # CORS Configuration - Allow frontend origins
 # Set CORS_ORIGINS env var to your frontend URL in production (e.g., https://your-app.vercel.app)
 # Use * for development or comma-separated URLs for multiple origins
